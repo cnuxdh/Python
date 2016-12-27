@@ -9,52 +9,28 @@ to evaluate the error based on POS data
 """
 
 
-
+import fileio
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-
-numlines = 39
-
-rp_pitch = np.zeros(numlines)
-rp_roll  = np.zeros(numlines)
-rp_yaw   = np.zeros(numlines)
+#for pos data
 
 
 rpfile = r'c:\Work\Papers\Pano\data\5point_relativepose.txt'
-fp = open(rpfile, "r")
-lines = fp.readlines()
-index = 0;
-for line in lines:
-    temp1 = line.strip('\n') 
-    temp2 = temp1.split(" ")
-    #print(temp2)
-    rp_pitch[index] = float(temp2[0])
-    rp_roll[index] = float(temp2[1])
-    rp_yaw[index] = float(temp2[2])  
-    index = index + 1
+rpdata = fileio.readtxt(rpfile, " ")
+rp_pitch = rpdata[:,0]
+rp_roll  = rpdata[:,1]
+rp_yaw   = rpdata[:,2]  
 
-    
-pos_pitch = np.zeros(numlines)
-pos_roll  = np.zeros(numlines)
-pos_yaw   = np.zeros(numlines)        
+
+   
+   
 posfile = r'c:\Work\Papers\Pano\data\pana-cam.txt'
-fp = open(posfile, "r")
-lines = fp.readlines()
-index = 0;
-for line in lines:
-    temp1 = line.strip('\n') 
-    temp2 = temp1.split(" ")
-    #print(temp2)
-    pos_pitch[index] = float(temp2[0])
-    pos_roll[index] = float(temp2[1])
-    pos_yaw[index] = float(temp2[2]) 
-    index = index + 1
-
-    
-    
-    
+posdata = fileio.readtxt(posfile, " ")
+pos_pitch = posdata[:,0]
+pos_roll  = posdata[:,1]
+pos_yaw   = posdata[:,2]  
+   
 
 pitcherror = abs(rp_pitch - pos_pitch)
 print("pitch")
@@ -64,6 +40,7 @@ num = pitcherror.size
 #print(num)
 dist = np.sqrt(  np.sum(np.square(pitcherror)) / num )  
 print(dist)
+#plt.hist(pitcherror, bins=40, normed=True)
 #print(np.nanstd(pitcherror))
 
 
@@ -87,10 +64,30 @@ dist = np.sqrt(  np.sum(np.square(yawerror)) / num )
 print(dist)
 
 
+#for translation
+print('*************** translation **********************')
+numimage = (rpdata.shape)[0]
+angleArray = np.zeros(numimage)
+for i in range(0, numimage):
+    a = rpdata[i, 3:5]
+    b = posdata[i, 3:5]
+    na = np.sqrt(np.dot(a,a))
+    nb = np.sqrt(np.dot(b,b))
+    #print( np.sqrt(np.dot(a,a)) )
+    #print( np.sqrt(np.dot(b,b)) )
+    dotValue = np.dot(a,b) / (na*nb)    
+    #print( np.arccos(dotValue) / np.pi * 180 )
+    angleArray[i] = np.arccos(dotValue) / np.pi * 180 
+    
+#print(angleArray)
+
+print( np.min( angleArray ) )
+print( np.max( angleArray ) )
+num = angleArray.size
+dist = np.sqrt(  np.sum(np.square(angleArray)) / num )  
+print(dist)
 
 #save the errors
-
-
 #plt.figure(figsize=(4,3),dpi=300)
 #plt.hist(pitcherror, bins=20, normed=True)
 #print(pitcherror)
